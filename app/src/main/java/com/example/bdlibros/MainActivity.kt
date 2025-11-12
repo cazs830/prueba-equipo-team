@@ -2,6 +2,7 @@ package com.example.bdlibros
 
 import android.R.attr.textSize
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +63,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bdlibros.ui.theme.BDLibrosTheme
 import com.example.bdlibros.ui.theme.coopbl
+import kotlinx.coroutines.launch
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
+import retrofit2.http.POST
 import java.time.format.TextStyle
 
 class MainActivity : ComponentActivity() {
@@ -88,6 +99,44 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+data class ModeloRegistro(
+    val dato1: String,
+    val dato2: Double,
+    val dato3: Int
+)
+interface ApiService {
+    @GET("servicio.php?registros")
+    suspend fun registros(): List<ModeloRegistro>
+
+    @POST("servicio.php?iniciarSesion")
+    @FormUrlEncoded
+    suspend fun iniciarSesion(
+        @Field("usuario") usuario: String,
+        @Field("contrasena") contrasena: String,
+    ): Response<String>
+
+    @POST("servicio.php?agregarRegistro")
+    @FormUrlEncoded
+    suspend fun agregarRegistro(
+        @Field("dato1") dato1: String,
+        @Field("dato2") dato2: Double,
+        @Field("dato3") dato3: Int
+    ): Response<Unit>
+}
+
+val retrofit = Retrofit.Builder()
+    .baseUrl("http://98.94.191.26/api/")
+    .addConverterFactory(ScalarsConverterFactory.create())
+    .addConverterFactory(GsonConverterFactory.create())
+    .build()
+
+val api = retrofit.create(ApiService::class.java)
+
+
+
+
+
 
 @Composable
 
@@ -738,6 +787,8 @@ fun PagLogin(navController: NavHostController, modifier: Modifier = Modifier) {
     var usuario: String by remember { mutableStateOf("") }
     var contrasena: String by remember { mutableStateOf("") }
 
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -774,14 +825,29 @@ fun PagLogin(navController: NavHostController, modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                Toast.makeText(context, "Usuario: ${usuario}", Toast.LENGTH_SHORT).show()
+                scope.launch {
+                    try {
+                        val respuesta : Response<String> = api.iniciarSesion(usuario, contrasena)
+                        if(respuesta.body()=="correcto"){
+                            Toast.makeText(context, "Bienvenido", Toast.LENGTH_SHORT).show()
+                            navController.navigate("ventas")
+                        }else{
+                            Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    catch (e: Exception) {
+                        Log.e("API", "Error al iniciar sesión: ${e.message}")
+                    }
+                }
+
+                /*Toast.makeText(context, "Usuario: ${usuario}", Toast.LENGTH_SHORT).show()
                 Toast.makeText(context, "Contraseña: ${contrasena}", Toast.LENGTH_SHORT).show()
                 if (usuario == "admin" && contrasena == "admin") {
                     Toast.makeText(context, "Credenciales correctas", Toast.LENGTH_SHORT).show()
                     navController.navigate("ventas")
                 } else {
                     Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
-                }
+                }*/
                       },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFDDDED),
