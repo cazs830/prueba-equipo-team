@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = "login",
+                        startDestination = "ventas",
                         modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("login") {
@@ -769,7 +769,7 @@ fun LstLibrosContent(navController: NavHostController, modifier: Modifier, tabla
 fun Ventas(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "menu") {
+    NavHost(navController = navController, startDestination = "login") {
         composable("libros") { LstLibrosContent(navController, modifier, 1) }
         composable("autores") { LstLibrosContent(navController, modifier, 2) }
         composable("resenas") { LstLibrosContent(navController, modifier, 3) }
@@ -830,7 +830,7 @@ fun PagLogin(navController: NavHostController, modifier: Modifier = Modifier) {
                         val respuesta : Response<String> = api.iniciarSesion(usuario, contrasena)
                         if(respuesta.body()=="correcto"){
                             Toast.makeText(context, "Bienvenido", Toast.LENGTH_SHORT).show()
-                            navController.navigate("ventas")
+                            navController.navigate("menu")
                         }else{
                             Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
                         }
@@ -839,15 +839,6 @@ fun PagLogin(navController: NavHostController, modifier: Modifier = Modifier) {
                         Log.e("API", "Error al iniciar sesión: ${e.message}")
                     }
                 }
-
-                /*Toast.makeText(context, "Usuario: ${usuario}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Contraseña: ${contrasena}", Toast.LENGTH_SHORT).show()
-                if (usuario == "admin" && contrasena == "admin") {
-                    Toast.makeText(context, "Credenciales correctas", Toast.LENGTH_SHORT).show()
-                    navController.navigate("ventas")
-                } else {
-                    Toast.makeText(context, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
-                }*/
                       },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFDDDED),
